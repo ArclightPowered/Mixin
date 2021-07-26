@@ -28,7 +28,6 @@ import java.net.URL;
 
 import org.spongepowered.asm.service.IClassProvider;
 
-import cpw.mods.gross.Java9ClassLoaderUtil;
 import cpw.mods.modlauncher.Launcher;
 
 /**
@@ -45,7 +44,7 @@ class ModLauncherClassProvider implements IClassProvider {
     @Override
     @Deprecated
     public URL[] getClassPath() {
-        return Java9ClassLoaderUtil.getSystemClassPathURLs();
+        return new URL[0];
     }
 
     /* (non-Javadoc)

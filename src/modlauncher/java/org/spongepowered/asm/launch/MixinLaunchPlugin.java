@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 
+import cpw.mods.modlauncher.api.NamedPath;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -178,7 +179,7 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
     }
 
     @Override
-    public void addResources(List<Entry<String, Path>> resources) {
+    public void addResources(List resources) {
         this.service.getPrimaryContainer().addResources(resources);
     }
 
@@ -189,13 +190,18 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
     public <T> T getExtension() {
         return null;
     }
-    
-    @Override
+
     public void initializeLaunch(ITransformerLoader transformerLoader, Path[] specialPaths) {
         this.transformerLoader = transformerLoader;
         MixinBootstrap.doInit(CommandLineOptions.of(this.commandLineMixins));
         MixinBootstrap.inject();
         this.service.onStartup();
+    }
+
+    // ModLauncher 9.0+
+    @Override
+    public void initializeLaunch(ITransformerLoader transformerLoader, NamedPath[] specialPaths) {
+        initializeLaunch(transformerLoader, (Path[]) null);
     }
 
     @Override

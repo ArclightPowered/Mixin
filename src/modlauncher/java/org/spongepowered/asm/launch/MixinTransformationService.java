@@ -84,10 +84,6 @@ public class MixinTransformationService implements ITransformationService {
         MixinBootstrap.start();
         this.plugin.init(environment, this.commandLineMixins);
     }
-    
-    @Override
-    public void beginScanning(IEnvironment environment) {
-    }
 
     @SuppressWarnings("rawtypes")
     @Override

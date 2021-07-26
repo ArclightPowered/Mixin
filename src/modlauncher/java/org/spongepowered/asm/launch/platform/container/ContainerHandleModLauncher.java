@@ -24,7 +24,11 @@
  */
 package org.spongepowered.asm.launch.platform.container;
 
+import cpw.mods.jarhandling.SecureJar;
+
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -32,7 +36,7 @@ import java.util.Map.Entry;
  * ModLauncher root container
  */
 public class ContainerHandleModLauncher extends ContainerHandleVirtual {
-    
+
     /**
      * Container handle for resources offered by ModLauncher
      */
@@ -46,47 +50,78 @@ public class ContainerHandleModLauncher extends ContainerHandleVirtual {
             this.name = name;
             this.path = path;
         }
-        
+
         public String getName() {
             return this.name;
         }
-        
+
         public Path getPath() {
             return this.path;
         }
-        
+
         @Override
         public String toString() {
             return String.format("ContainerHandleModLauncher.Resource(%s:%s)", this.name, this.path);
         }
-        
+
+    }
+
+    public static class SecureJarHandle implements IContainerHandle {
+
+        private final SecureJar secureJar;
+
+        public SecureJarHandle(SecureJar secureJar) {
+            this.secureJar = secureJar;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("ContainerHandleModLauncher.SecureJar(%s)", this.secureJar);
+        }
+
+        @Override
+        public String getAttribute(String name) {
+            return this.secureJar.getManifest().getMainAttributes().getValue(name);
+        }
+
+        @Override
+        public Collection<IContainerHandle> getNestedContainers() {
+            return Collections.emptyList();
+        }
     }
 
     public ContainerHandleModLauncher(String name) {
         super(name);
     }
-    
+
     /**
      * Add a resource to to this container
-     * 
+     *
      * @param name Resource name
      * @param path Resource path
      */
     public void addResource(String name, Path path) {
         this.add(new Resource(name, path));
     }
-    
+
     /**
      * Add a collection of resources to this container
-     * 
+     *
      * @param resources Resources to add
      */
-    public void addResources(List<Entry<String, Path>> resources) {
-        for (Entry<String, Path> resource : resources) {
-            this.addResource(resource.getKey(), resource.getValue());
+    public void addResources(List<?> resources) {
+        for (Object resource : resources) {
+            if (resource instanceof Entry) {
+                @SuppressWarnings("unchecked")
+                Entry<String, Path> entry = (Entry<String, Path>) resource;
+                this.addResource(entry.getKey(), entry.getValue());
+            }
+            if (resource instanceof SecureJar) {
+                this.add(new SecureJarHandle((SecureJar) resource));
+            }
         }
     }
-    
+
     @Override
     public String toString() {
         return String.format("ModLauncher Root Container(%x)", this.hashCode());
