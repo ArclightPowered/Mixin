@@ -446,7 +446,7 @@ uploadArchives {
                 configuration = configurations.deployerJars
                 pom mavenPom
                 repository(url: project.spongeRepo) {
-                    authentication(userName: project.spongeUsername, password: project.spongePassword)
+                    authentication(userName: project.mavenUser, password: project.mavenToken)
                 }
             }
         }

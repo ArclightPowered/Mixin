@@ -51,31 +51,31 @@ import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 
 /**
- * Mixin launch plugin 
+ * Mixin launch plugin
  */
 public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodeProvider {
-    
+
     /**
      * Name used for ModLauncher mixin service components
      */
     public static final String NAME = "mixin";
-    
+
     /**
      * Class processing components
      */
     private final List<IClassProcessor> processors = new ArrayList<IClassProcessor>();
 
     /**
-     * Mixin config names specified on the command line 
+     * Mixin config names specified on the command line
      */
     private List<String> commandLineMixins;
 
     private ITransformerLoader transformerLoader;
-    
+
     private MixinServiceModLauncher service;
-    
+
     private ModLauncherAuditTrail auditTrail;
-    
+
     /* (non-Javadoc)
      * @see cpw.mods.modlauncher.serviceapi.ILaunchPluginService#name()
      */
@@ -83,17 +83,17 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
     public String name() {
         return MixinLaunchPlugin.NAME;
     }
-    
+
     @Override
     public EnumSet<Phase> handlesClass(Type classType, boolean isEmpty) {
         throw new IllegalStateException("Outdated ModLauncher");
     }
-    
+
     @Override
     public boolean processClass(Phase phase, ClassNode classNode, Type classType) {
         throw new IllegalStateException("Outdated ModLauncher");
     }
-    
+
     /* (non-Javadoc)
      * @see cpw.mods.modlauncher.serviceapi.ILaunchPluginService#handlesClass(
      *      org.objectweb.asm.Type, boolean, java.lang.String)
@@ -103,7 +103,7 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
         if (MixinLaunchPlugin.NAME.equals(reason)) {
             return Phases.NONE;
         }
-        
+
         // All processors can nominate phases, we aggregate the results
         EnumSet<Phase> phases = EnumSet.<Phase>noneOf(Phase.class);
         synchronized (this.processors) {
@@ -114,7 +114,7 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
                 }
             }
         }
-        
+
         return phases;
     }
 
@@ -127,16 +127,16 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
     @Override
     public boolean processClass(Phase phase, ClassNode classNode, Type classType, String reason) {
         boolean processed = false;
-        
+
         synchronized (this.processors) {
             for (IClassProcessor postProcessor : this.processors) {
                 processed |= postProcessor.processClass(phase, classNode, classType, reason);
             }
         }
-        
+
         return processed;
     }
-    
+
     /**
      * Initialisation routine, called as a lifecycle event from the
      * transformation service
@@ -154,7 +154,7 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
         this.commandLineMixins = commandLineMixins;
         this.service.onInit(this);
     }
-    
+
     /* (non-Javadoc)
      * @see cpw.mods.modlauncher.serviceapi.ILaunchPluginService
      *      #customAuditConsumer(java.lang.String, java.util.function.Consumer)
@@ -171,7 +171,7 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
     public void addResource(Path resource, String name) {
         this.service.getPrimaryContainer().addResource(name, resource);
     }
-    
+
     // ModLauncher 7.0+
     @Override
     public void offerResource(Path resource, String name) {
@@ -214,11 +214,11 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
         if (!runTransformers) {
             throw new IllegalArgumentException("ModLauncher service does not currently support retrieval of untransformed bytecode");
         }
-        
+
         byte[] classBytes;
-        
+
         try {
-            classBytes = this.transformerLoader.buildTransformedClassNodeFor(name);
+            classBytes = this.transformerLoader.buildTransformedClassNodeFor(name.replace('/', '.'));
         } catch (ClassNotFoundException ex) {
             URL url = Thread.currentThread().getContextClassLoader().getResource(name.replace('.', '/') + ".class");
             if (url == null) {
@@ -230,8 +230,8 @@ public class MixinLaunchPlugin implements ILaunchPluginService, IClassBytecodePr
                 throw ex;
             }
         }
-        
-        if (classBytes == null) {
+
+        if (classBytes == null || classBytes.length == 0) {
             throw new ClassNotFoundException(name.replace('/', '.'));
         }
 
